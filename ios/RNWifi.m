@@ -5,10 +5,10 @@
 //#import <UIKit/UIKit.h>
 
 @implementation WifiManager
-  
+
 + (BOOL)requiresMainQueueSetup
 {
-  return YES;
+    return YES;
 }
 
 RCT_EXPORT_MODULE();
@@ -92,6 +92,24 @@ RCT_REMAP_METHOD(getCurrentWifiSSID,
     reject(@"cannot_detect_ssid", @"Cannot detect SSID", nil);
 }
 
+RCT_REMAP_METHOD(getCurrentWifiInfo,
+                 resolver:(RCTPromiseResolveBlock)resolve
+                 rejecter:(RCTPromiseRejectBlock)reject) {
+    
+    NSArray *ifs = (__bridge_transfer id)CNCopySupportedInterfaces();
+    NSMutableDictionary *connections = [[NSMutableDictionary alloc] init];
+    for (NSString *ifnam in ifs) {
+        NSDictionary *info = (__bridge_transfer id)CNCopyCurrentNetworkInfo((__bridge CFStringRef)ifnam);
+        connections[ifnam] = info;
+    }
+    if (connections.count > 0) {
+        resolve(connections);
+        return;
+    }
+    
+    reject(@"cannot_get_wifi_info", @"Cannot Get Wifi Info", nil);
+}
+
 - (NSDictionary*)constantsToExport {
     // Officially better to use UIApplicationOpenSettingsURLString
     return @{
@@ -100,4 +118,5 @@ RCT_REMAP_METHOD(getCurrentWifiSSID,
 }
 
 @end
+
 
